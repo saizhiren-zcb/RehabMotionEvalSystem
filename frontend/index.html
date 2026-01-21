@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>康复动作评估系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 标题栏 -->
+        <header>
+            <h1>康复动作评估系统</h1>
+        </header>
+        
+        <!-- 主要内容区域 -->
+        <main>
+            <div class="main-content">
+                <!-- 视频预览区域 -->
+                <div class="video-section">
+                    <div class="video-container">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas" class="overlay"></canvas>
+                        <div id="videoPrompt" class="video-prompt">选择一个动作开始监测评估</div>
+                    </div>
+                    <div class="video-controls">
+                        <button id="startBtn" class="control-btn start-btn">开始评估</button>
+                        <button id="stopBtn" class="control-btn stop-btn" disabled>停止评估</button>
+                    </div>
+                </div>
+                
+                <!-- 统计信息区域 -->
+                <div class="stats-section">
+                    <!-- 动作选择 -->
+                    <div class="action-selection">
+                        <label for="actionSelect">选择动作：</label>
+                        <select id="actionSelect">
+                            <!-- 选项将通过JavaScript动态添加 -->
+                        </select>
+                    </div>
+                    
+                    <!-- 统计数据 -->
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">当前动作：</span>
+                            <span id="currentAction" class="stat-value">未选择</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">动作次数：</span>
+                            <span id="actionCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">当前阶段：</span>
+                            <span id="actionStage" class="stat-value stage">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">动作角度：</span>
+                            <span id="actionAngle" class="stat-value">0.0°</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 功能按钮 -->
+                    <div class="function-buttons">
+                        <button id="settingsBtn" class="function-btn settings-btn">设置</button>
+                        <button id="customActionsBtn" class="function-btn custom-btn">自定义动作</button>
+                        <button id="saveVideoBtn" class="function-btn save-btn">保存视频</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 底部信息 -->
+        <footer>
+            <p>康复动作评估系统 © 2026</p>
+        </footer>
+    </div>
+    
+    <!-- 设置面板（默认隐藏） -->
+    <div id="settingsPanel" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>设置</h2>
+            <div class="settings-content">
+                <div class="setting-item">
+                    <label for="confidenceSlider">置信度阈值：</label>
+                    <input type="range" id="confidenceSlider" min="0.1" max="1.0" step="0.1" value="0.5">
+                    <span id="confidenceValue">0.5</span>
+                </div>
+                <div class="setting-item">
+                    <label for="imageSizeSelect">图像大小：</label>
+                    <select id="imageSizeSelect">
+                        <option value="480">480</option>
+                        <option value="640" selected>640</option>
+                        <option value="800">800</option>
+                        <option value="1024">1024</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="lineWidthSlider">线条粗细：</label>
+                    <input type="range" id="lineWidthSlider" min="1" max="5" step="1" value="3">
+                    <span id="lineWidthValue">3</span>
+                </div>
+            </div>
+            <button id="saveSettingsBtn" class="save-settings-btn">保存设置</button>
+        </div>
+    </div>
+    
+    <!-- 自定义动作面板（默认隐藏） -->
+    <div id="customActionsPanel" class="modal">
+        <div class="modal-content custom-actions-content">
+            <span class="close">&times;</span>
+            <h2>自定义动作管理</h2>
+            <div class="custom-actions-main">
+                <!-- 左侧：动作列表 -->
+                <div class="action-list-section">
+                    <h3>动作列表</h3>
+                    <div id="actionList" class="action-list">
+                        <!-- 动作列表将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+                
+                <!-- 右侧：动作编辑 -->
+                <div class="action-edit-section">
+                    <h3 id="editActionTitle">添加新动作</h3>
+                    <form id="actionForm" class="action-form">
+                        <input type="hidden" id="actionId">
+                        <div class="form-item">
+                            <label for="actionName">动作名称：</label>
+                            <input type="text" id="actionName" required>
+                        </div>
+                        <div class="form-item">
+                            <label for="upAngle">上角度阈值：</label>
+                            <input type="number" id="upAngle" step="1" required>
+                        </div>
+                        <div class="form-item">
+                            <label for="downAngle">下角度阈值：</label>
+                            <input type="number" id="downAngle" step="1" required>
+                        </div>
+                        <div class="form-item">
+                            <label for="keypointsSelect">选择关键点（3个）：</label>
+                            <div class="keypoints-select">
+                                <select id="keypointsSelect" multiple size="6" required>
+                                    <optgroup label="面部">
+                                        <option value="0">0 - 鼻子</option>
+                                        <option value="1">1 - 左眼</option>
+                                        <option value="2">2 - 右眼</option>
+                                        <option value="3">3 - 左耳</option>
+                                        <option value="4">4 - 右耳</option>
+                                    </optgroup>
+                                    <optgroup label="上半身">
+                                        <option value="5">5 - 左肩</option>
+                                        <option value="6">6 - 右肩</option>
+                                        <option value="7">7 - 左肘</option>
+                                        <option value="8">8 - 右肘</option>
+                                        <option value="9">9 - 左腕</option>
+                                        <option value="10">10 - 右腕</option>
+                                    </optgroup>
+                                    <optgroup label="下半身">
+                                        <option value="11">11 - 左髋</option>
+                                        <option value="12">12 - 右髋</option>
+                                        <option value="13">13 - 左膝</option>
+                                        <option value="14">14 - 右膝</option>
+                                        <option value="15">15 - 左踝</option>
+                                        <option value="16">16 - 右踝</option>
+                                    </optgroup>
+                                </select>
+                                <div class="keypoints-help">
+                                    <p>💡 提示：按住Ctrl键（或Mac上的Command键）可进行多选，最多选择3个关键点</p>
+                                    <p>💡 点击已选择的选项可取消选择</p>
+                                    <p class="selected-keypoints">已选择：<span id="selectedKeypoints">无</span></p>
+                                </div>
+                            </div>
+                            <input type="hidden" id="keypoints" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" id="submitBtn" class="submit-btn">保存动作</button>
+                            <button type="button" id="cancelEditBtn" class="cancel-btn">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 脚本文件 -->
+    <script src="scripts/websocket.js"></script>
+    <script src="scripts/visualization.js"></script>
+    <script src="scripts/action_selector.js"></script>
+    <script src="scripts/settings.js"></script>
+    <script src="scripts/custom_actions_v2.js"></script>
+    <script src="scripts/video_saver.js"></script>
+    <script src="scripts/webcam.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html>
